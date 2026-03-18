@@ -1,0 +1,116 @@
+# =============================================================
+#  AMR Resistance Prediction — .gitignore
+# =============================================================
+
+# -------------------------------------------------------------
+#  DATOS — nunca versionar (tamaño + licencia BV-BRC)
+# -------------------------------------------------------------
+datos/brutos/
+datos/procesados/
+
+# -------------------------------------------------------------
+#  MODELOS ENTRENADOS
+# -------------------------------------------------------------
+outputs/models/
+*.pkl
+*.joblib
+*.pt
+*.pth
+*.ckpt
+
+# -------------------------------------------------------------
+#  FIGURAS GENERADAS (descomenta si prefieres no versionar)
+# -------------------------------------------------------------
+# informes/figuras/
+# outputs/figures/
+
+# -------------------------------------------------------------
+#  JUPYTER
+# -------------------------------------------------------------
+.ipynb_checkpoints/
+**/.ipynb_checkpoints/
+*.nbconvert.ipynb
+
+# -------------------------------------------------------------
+#  PYTHON
+# -------------------------------------------------------------
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+
+# Distribuciones / builds
+build/
+dist/
+*.egg-info/
+*.egg
+.eggs/
+
+# -------------------------------------------------------------
+#  ENTORNOS VIRTUALES Y CONDA
+# -------------------------------------------------------------
+.env
+.venv
+env/
+venv/
+ENV/
+*.conda
+
+# -------------------------------------------------------------
+#  NUMPY / SCIPY — matrices intermedias grandes
+# -------------------------------------------------------------
+*.npz
+*.npy
+*.h5
+*.hdf5
+
+# Excepciones: si quieres versionar algún array pequeño concreto
+# !datos/procesados/y_final.npy
+
+# -------------------------------------------------------------
+#  LOGS Y PROFILING
+# -------------------------------------------------------------
+*.log
+*.out
+logs/
+runs/
+mlruns/
+wandb/
+lightning_logs/
+
+# -------------------------------------------------------------
+#  SISTEMA OPERATIVO
+# -------------------------------------------------------------
+# macOS
+.DS_Store
+.AppleDouble
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux
+*~
+.nfs*
+
+# -------------------------------------------------------------
+#  EDITORES E IDEs
+# -------------------------------------------------------------
+.vscode/
+.idea/
+*.swp
+*.swo
+*.sublime-project
+*.sublime-workspace
+
+# -------------------------------------------------------------
+#  SECRETOS Y CREDENCIALES — nunca al repo
+# -------------------------------------------------------------
+.env.local
+secrets.yml
+credentials.json
+*.key
+*.pem
