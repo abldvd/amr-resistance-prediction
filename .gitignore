@@ -3,12 +3,15 @@
 # =============================================================================
 
 # --- Datos (nunca versionar por tamaño y licencia BV-BRC) -------------------
-datos/brutos/
-datos/procesados/
+# La carpeta data/ SÍ se versiona (estructura), el contenido NO.
+data/brutos/
+data/procesados/
 *.fasta
 *.fastq
 *.npz
 *.npy
+*.csv
+*.json
 
 # --- Outputs de modelos ------------------------------------------------------
 outputs/models/

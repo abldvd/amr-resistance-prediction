@@ -20,7 +20,7 @@ x-common: &common
     target: runtime
   volumes:
     - .:/workspace:cached
-    - ${AMR_DATA_DIR:-~/amr-data}:/workspace/datos:cached
+    - ${AMR_DATA_DIR:-./data}:/workspace/datos:cached
     - pip-cache:/home/amr/.cache/pip
   ports:
     - "${JUPYTER_PORT:-8888}:8888"
