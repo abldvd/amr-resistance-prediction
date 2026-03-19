@@ -1,0 +1,15 @@
+# =============================================================================
+# requirements/gpu.txt — PyTorch CUDA 12.1
+# Imagen ~7 GB. Requiere:
+#   - GPU NVIDIA con driver >= 525 en el host
+#   - NVIDIA Container Toolkit instalado en WSL2
+#     https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html
+#
+# Verifica tu driver antes de construir:
+#   nvidia-smi   (en el host WSL2)
+# =============================================================================
+
+--extra-index-url https://download.pytorch.org/whl/cu121
+
+torch==2.3.1+cu121
+torchvision==0.18.1+cu121

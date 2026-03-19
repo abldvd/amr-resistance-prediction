@@ -1,116 +1,57 @@
-# =============================================================
-#  AMR Resistance Prediction — .gitignore
-# =============================================================
+# =============================================================================
+# AMR Project — .gitignore
+# =============================================================================
 
-# -------------------------------------------------------------
-#  DATOS — nunca versionar (tamaño + licencia BV-BRC)
-# -------------------------------------------------------------
+# --- Datos (nunca versionar por tamaño y licencia BV-BRC) -------------------
 datos/brutos/
 datos/procesados/
-
-# -------------------------------------------------------------
-#  MODELOS ENTRENADOS
-# -------------------------------------------------------------
-outputs/models/
-*.pkl
-*.joblib
-*.pt
-*.pth
-*.ckpt
-
-# -------------------------------------------------------------
-#  FIGURAS GENERADAS (descomenta si prefieres no versionar)
-# -------------------------------------------------------------
-# informes/figuras/
-# outputs/figures/
-
-# -------------------------------------------------------------
-#  JUPYTER
-# -------------------------------------------------------------
-.ipynb_checkpoints/
-**/.ipynb_checkpoints/
-*.nbconvert.ipynb
-
-# -------------------------------------------------------------
-#  PYTHON
-# -------------------------------------------------------------
-__pycache__/
-**/__pycache__/
-*.py[cod]
-*.pyo
-*.pyd
-.Python
-
-# Distribuciones / builds
-build/
-dist/
-*.egg-info/
-*.egg
-.eggs/
-
-# -------------------------------------------------------------
-#  ENTORNOS VIRTUALES Y CONDA
-# -------------------------------------------------------------
-.env
-.venv
-env/
-venv/
-ENV/
-*.conda
-
-# -------------------------------------------------------------
-#  NUMPY / SCIPY — matrices intermedias grandes
-# -------------------------------------------------------------
+*.fasta
+*.fastq
 *.npz
 *.npy
-*.h5
-*.hdf5
 
-# Excepciones: si quieres versionar algún array pequeño concreto
-# !datos/procesados/y_final.npy
+# --- Outputs de modelos ------------------------------------------------------
+outputs/models/
+outputs/figures/
+informes/figuras/
 
-# -------------------------------------------------------------
-#  LOGS Y PROFILING
-# -------------------------------------------------------------
-*.log
-*.out
-logs/
-runs/
-mlruns/
-wandb/
-lightning_logs/
+# --- Variables de entorno (contienen tokens/secretos) -----------------------
+.env
+# .env.example SÍ se versiona (es la plantilla pública)
 
-# -------------------------------------------------------------
-#  SISTEMA OPERATIVO
-# -------------------------------------------------------------
-# macOS
+# --- Python ------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+dist/
+build/
+*.egg-info/
+.eggs/
+
+# --- Jupyter -----------------------------------------------------------------
+.ipynb_checkpoints/
+*/.ipynb_checkpoints/*
+# Los notebooks SÍ se versionan pero sin outputs:
+# Instala nbstripout: pip install nbstripout && nbstripout --install
+
+# --- Docker ------------------------------------------------------------------
+# No ignorar docker-compose.yml ni Dockerfile (son parte del proyecto)
+
+# --- macOS -------------------------------------------------------------------
 .DS_Store
 .AppleDouble
 
-# Windows
-Thumbs.db
-ehthumbs.db
-Desktop.ini
+# --- VSCode ------------------------------------------------------------------
+# .vscode/ se puede versionar si quieres compartir settings con el equipo
+# En este proyecto NO lo ignoramos para que el devcontainer funcione bien
+# .vscode/
 
-# Linux
-*~
-.nfs*
-
-# -------------------------------------------------------------
-#  EDITORES E IDEs
-# -------------------------------------------------------------
-.vscode/
-.idea/
-*.swp
-*.swo
-*.sublime-project
-*.sublime-workspace
-
-# -------------------------------------------------------------
-#  SECRETOS Y CREDENCIALES — nunca al repo
-# -------------------------------------------------------------
-.env.local
-secrets.yml
-credentials.json
-*.key
-*.pem
+# --- Misc --------------------------------------------------------------------
+*.log
+*.tmp
+.hypothesis/
