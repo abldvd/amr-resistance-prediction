@@ -1,9 +1,17 @@
 # ── Datos (demasiado grandes para git) ─────────────────────────────────────
-datos/brutos/
-datos/procesados/
+datos/brutos/*
+datos/procesados/*
+!datos/brutos/.gitkeep
+!datos/brutos/genomas_fasta/
+datos/brutos/genomas_fasta/*
+!datos/brutos/genomas_fasta/.gitkeep
+!datos/procesados/.gitkeep
 
-# ── Outputs ────────────────────────────────────────────────────────────────
-informes/figuras/
+# ── Informes (modelos y figuras generados) ─────────────────────────────────
+informes/modelos/*
+informes/figuras/*
+!informes/modelos/.gitkeep
+!informes/figuras/.gitkeep
 
 # ── Python ─────────────────────────────────────────────────────────────────
 __pycache__/

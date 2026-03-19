@@ -7,9 +7,9 @@ echo "╔═══════════════════════�
 echo "║  AMR Resistance Prediction — Post-create     ║"
 echo "╚══════════════════════════════════════════════╝"
 
-# Crear directorios de datos si no existen
-mkdir -p data/raw/genomes_fasta data/processed
-mkdir -p outputs/models outputs/figures
+# Crear directorios si no existen
+mkdir -p datos/brutos/genomas_fasta datos/procesados
+mkdir -p informes/modelos informes/figuras
 
 # Configurar git
 git config --global --add safe.directory /workspace

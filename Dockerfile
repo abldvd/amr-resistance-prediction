@@ -39,8 +39,6 @@ COPY requirements/ ./
 ARG DEVICE=cpu
 
 # Instalar PyTorch primero (es el paquete más pesado)
-# CPU: índice especial sin CUDA (~300 MB)
-# GPU: índice con CUDA 12.1 (~2.5 GB)
 RUN if [ "$DEVICE" = "gpu" ]; then \
         pip install -r torch-gpu.txt ; \
     else \
@@ -63,8 +61,8 @@ ARG USER_GID=${USER_UID}
 
 RUN groupadd --gid ${USER_GID} ${USERNAME} \
     && useradd --uid ${USER_UID} --gid ${USER_GID} -m ${USERNAME} -s /bin/bash \
-    && mkdir -p /workspace/data/raw/genomes_fasta /workspace/data/processed \
-                /workspace/outputs/models /workspace/outputs/figures \
+    && mkdir -p /workspace/datos/brutos/genomas_fasta /workspace/datos/procesados \
+                /workspace/informes/modelos /workspace/informes/figuras \
     && chown -R ${USERNAME}:${USERNAME} /workspace
 
 # Jupyter sin token ni password
@@ -76,9 +74,6 @@ RUN mkdir -p ${JUPYTER_CONFIG_DIR} \
     && echo "c.ServerApp.password = ''" >> ${JUPYTER_CONFIG_DIR}/jupyter_server_config.py \
     && echo "c.ServerApp.disable_check_xsrf = True" >> ${JUPYTER_CONFIG_DIR}/jupyter_server_config.py \
     && chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}
-
-# src/ importable desde notebooks
-ENV PYTHONPATH="/workspace/src:${PYTHONPATH}"
 
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
     CMD curl -f http://localhost:8888/api/status || exit 1

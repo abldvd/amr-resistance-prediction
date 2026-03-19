@@ -104,39 +104,31 @@ amr-resistance-prediction/
 │   ├── torch-cpu.txt              # PyTorch CPU-only
 │   └── torch-gpu.txt              # PyTorch CUDA 12.1
 │
-├── data/
-│   ├── raw/                       # datos BV-BRC — no versionados (.gitignore)
-│   │   ├── genomes_fasta/         # secuencias WGS por lotes (.fasta)
-│   │   ├── amr_phenotypes.csv     # etiquetas S/I/R + valores MIC
-│   │   └── amr_gene_matrix.csv    # presencia/ausencia de genes AMR
-│   └── processed/                 # outputs del preprocesado — no versionados
-│       ├── genome_qc_report.csv
-│       ├── kmer_matrix.npz
+├── datos/
+│   ├── brutos/                    # datos BV-BRC — no versionados (.gitignore)
+│   │   ├── genomas_fasta/         # secuencias WGS por lotes (.fasta)
+│   │   ├── amr_fenotipos.csv      # etiquetas S/I/R + valores MIC
+│   │   └── amr_matriz_genes.csv   # presencia/ausencia de genes AMR
+│   └── procesados/                # outputs del preprocesado — no versionados
+│       ├── informe_qc_genomas.csv
+│       ├── matriz_kmers.npz
 │       ├── X_final.npz
 │       └── y_final.npy
 │
 ├── notebooks/
-│   ├── 01_data_download.ipynb
-│   ├── 02_genome_qc.ipynb
-│   ├── 03_target_variable.ipynb
-│   ├── 04_kmer_extraction.ipynb
-│   ├── 05_feature_matrix.ipynb
-│   ├── 06_preprocessing.ipynb
-│   ├── 07_train_rf_xgb.ipynb
-│   ├── 08_train_tabnet.ipynb
-│   └── 09_interpretability.ipynb
+│   ├── 01_descarga_datos.ipynb
+│   ├── 02_control_calidad_genomica.ipynb
+│   ├── 03_variable_target.ipynb
+│   ├── 04_extraccion_kmers.ipynb
+│   ├── 05_matriz_features.ipynb
+│   ├── 06_preprocesado.ipynb
+│   ├── 07_entrenamiento_rf_xgb.ipynb
+│   ├── 08_entrenamiento_tabnet.ipynb
+│   └── 09_interpretabilidad.ipynb
 │
-├── src/
-│   └── amr/                       # código reutilizable (importado desde notebooks)
-│       ├── __init__.py
-│       ├── data.py
-│       ├── features.py
-│       ├── models.py
-│       └── evaluation.py
-│
-├── outputs/
-│   ├── models/                    # modelos serializados — no versionados
-│   └── figures/                   # gráficos exportados — no versionados
+├── informes/
+│   ├── modelos/                   # modelos serializados — no versionados
+│   └── figuras/                   # gráficos exportados — no versionados
 │
 ├── Dockerfile                     # multi-stage, soporta DEVICE=cpu|gpu
 ├── docker-compose.yml             # perfiles: cpu · gpu
@@ -274,7 +266,7 @@ F1  →  Dev Containers: Reopen in Container
 
 2. **Docker arranca el contenedor** con tu código montado dentro.
 
-3. **Se ejecuta `post-create.sh`** — crea los directorios de datos, verifica las dependencias y configura git.
+3. **Se ejecuta `post-create.sh`** — crea los directorios de datos e informes, verifica las dependencias y configura git.
 
 4. **VSCode se reconecta al contenedor** — instala las extensiones (Python, Jupyter, Ruff, GitLens) dentro del contenedor automáticamente.
 
@@ -399,7 +391,7 @@ if torch.cuda.is_available():
 
 ## Descarga de datos
 
-Los datos **no están incluidos** en el repositorio por tamaño y licencia de BV-BRC. Una vez el entorno esté funcionando, ejecuta el notebook `01_data_download.ipynb` para descargarlos vía la API de BV-BRC.
+Los datos **no están incluidos** en el repositorio por tamaño y licencia de BV-BRC. Una vez el entorno esté funcionando, ejecuta el notebook `01_descarga_datos.ipynb` para descargarlos vía la API de BV-BRC.
 
 | Recurso | Tiempo estimado | Espacio en disco |
 |---|---|---|
@@ -414,8 +406,8 @@ Los datos **no están incluidos** en el repositorio por tamaño y licencia de BV
 ```
 API BV-BRC
     │
-    ├── endpoint genome_amr         →  amr_phenotypes.csv    (etiquetas S/I/R + MIC)
-    └── endpoint genome_sequence    →  genomes_fasta/         (contigs WGS)
+    ├── endpoint genome_amr         →  amr_fenotipos.csv     (etiquetas S/I/R + MIC)
+    └── endpoint genome_sequence    →  genomas_fasta/          (contigs WGS)
             │
             ├── [QC] N50 > 20 kb · contigs < 500 · GC 50–64%
             │
