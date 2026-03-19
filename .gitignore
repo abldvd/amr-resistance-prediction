@@ -1,60 +1,32 @@
-# =============================================================================
-# AMR Project — .gitignore
-# =============================================================================
+# ── Datos (demasiado grandes para git) ─────────────────────────────────────
+datos/brutos/
+datos/procesados/
 
-# --- Datos (nunca versionar por tamaño y licencia BV-BRC) -------------------
-# La carpeta data/ SÍ se versiona (estructura), el contenido NO.
-data/brutos/
-data/procesados/
-*.fasta
-*.fastq
-*.npz
-*.npy
-*.csv
-*.json
-
-# --- Outputs de modelos ------------------------------------------------------
-outputs/models/
-outputs/figures/
+# ── Outputs ────────────────────────────────────────────────────────────────
 informes/figuras/
 
-# --- Variables de entorno (contienen tokens/secretos) -----------------------
-.env
-# .env.example SÍ se versiona (es la plantilla pública)
-
-# --- Python ------------------------------------------------------------------
+# ── Python ─────────────────────────────────────────────────────────────────
 __pycache__/
 *.py[cod]
 *$py.class
-*.so
-.Python
-.pytest_cache/
-.ruff_cache/
-.mypy_cache/
+*.egg-info/
 dist/
 build/
-*.egg-info/
 .eggs/
 
-# --- Jupyter -----------------------------------------------------------------
+# ── Jupyter ────────────────────────────────────────────────────────────────
 .ipynb_checkpoints/
-*/.ipynb_checkpoints/*
-# Los notebooks SÍ se versionan pero sin outputs:
-# Instala nbstripout: pip install nbstripout && nbstripout --install
 
-# --- Docker ------------------------------------------------------------------
-# No ignorar docker-compose.yml ni Dockerfile (son parte del proyecto)
+# ── Entorno ────────────────────────────────────────────────────────────────
+.env
+.venv/
 
-# --- macOS -------------------------------------------------------------------
+# ── IDE ────────────────────────────────────────────────────────────────────
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea/
+
+# ── OS ─────────────────────────────────────────────────────────────────────
 .DS_Store
-.AppleDouble
-
-# --- VSCode ------------------------------------------------------------------
-# .vscode/ se puede versionar si quieres compartir settings con el equipo
-# En este proyecto NO lo ignoramos para que el devcontainer funcione bien
-# .vscode/
-
-# --- Misc --------------------------------------------------------------------
-*.log
-*.tmp
-.hypothesis/
+Thumbs.db

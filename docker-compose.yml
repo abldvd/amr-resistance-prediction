@@ -1,96 +1,53 @@
-# =============================================================================
-# AMR Resistance Prediction — docker-compose.yml
+# ============================================================================
+# docker-compose.yml — AMR Resistance Prediction
 #
-# Dos perfiles mutuamente excluyentes:
-#
-#   CPU (cualquier máquina):
-#     docker compose --profile cpu up -d
-#
-#   GPU (requiere NVIDIA Container Toolkit en el host):
-#     docker compose --profile gpu up -d
-#
-# Para VSCode Dev Containers, el perfil se selecciona en devcontainer.json.
-# =============================================================================
-
-# Bloque reutilizable con la configuración común a ambos servicios
-x-common: &common
-  build:
-    context: .
-    dockerfile: Dockerfile
-    target: runtime
-  volumes:
-    - .:/workspace:cached
-    - ${AMR_DATA_DIR:-./data}:/workspace/datos:cached
-    - pip-cache:/home/amr/.cache/pip
-  ports:
-    - "${JUPYTER_PORT:-8888}:8888"
-  environment:
-    - PYTHONPATH=/workspace/src
-    - PYTHONDONTWRITEBYTECODE=1
-    - PYTHONUNBUFFERED=1
-  env_file:
-    - .env
-  stdin_open: true
-  tty: true
-  healthcheck:
-    test: ["CMD", "curl", "-f", "http://localhost:8888/api"]
-    interval: 30s
-    timeout: 10s
-    retries: 3
-    start_period: 25s
-
+# Perfiles:
+#   docker compose --profile cpu up -d --build    # CPU
+#   docker compose --profile gpu up -d --build    # GPU (requiere NVIDIA)
+# ============================================================================
 
 services:
-
-  # ---------------------------------------------------------------------------
-  # Servicio CPU
-  # Uso: docker compose --profile cpu up -d
-  # ---------------------------------------------------------------------------
-  dev-cpu:
-    <<: *common
-    profiles: ["cpu"]
-    image: amr-pred:cpu
-    container_name: amr-dev-cpu
+  # ── CPU ───────────────────────────────────────────────────────────────────
+  amr-dev:
     build:
       context: .
       dockerfile: Dockerfile
-      target: runtime
       args:
         DEVICE: cpu
+    container_name: amr-dev
+    profiles: ["cpu"]
+    volumes:
+      - .:/workspace:cached
+    ports:
+      - "8888:8888"
+    env_file:
+      - .env
+    environment:
+      - PYTHONPATH=/workspace/src
+    restart: unless-stopped
 
-  # ---------------------------------------------------------------------------
-  # Servicio GPU
-  # Requisitos en el host WSL2:
-  #   1. Driver NVIDIA >= 525  →  nvidia-smi debe funcionar en WSL2
-  #   2. NVIDIA Container Toolkit instalado y configurado:
-  #        https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html
-  #   3. Reiniciar el daemon Docker tras instalar el toolkit:
-  #        sudo systemctl restart docker
-  #
-  # Verifica antes de arrancar:
-  #   docker run --rm --gpus all nvidia/cuda:12.1.0-base-ubuntu22.04 nvidia-smi
-  #
-  # Uso: docker compose --profile gpu up -d
-  # ---------------------------------------------------------------------------
-  dev-gpu:
-    <<: *common
-    profiles: ["gpu"]
-    image: amr-pred:gpu
-    container_name: amr-dev-gpu
+  # ── GPU ───────────────────────────────────────────────────────────────────
+  amr-dev-gpu:
     build:
       context: .
       dockerfile: Dockerfile
-      target: runtime
       args:
         DEVICE: gpu
+    container_name: amr-dev-gpu
+    profiles: ["gpu"]
+    volumes:
+      - .:/workspace:cached
+    ports:
+      - "8888:8888"
+    env_file:
+      - .env
+    environment:
+      - PYTHONPATH=/workspace/src
     deploy:
       resources:
         reservations:
           devices:
             - driver: nvidia
-              count: 1              # usa 1 GPU; ponlo a "all" si tienes varias
+              count: all
               capabilities: [gpu]
-
-
-volumes:
-  pip-cache:
+    restart: unless-stopped

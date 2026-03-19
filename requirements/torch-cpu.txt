@@ -1,0 +1,4 @@
+# requirements/torch-cpu.txt — PyTorch sin CUDA (~300 MB)
+--index-url https://download.pytorch.org/whl/cpu
+torch>=2.1
+torchvision>=0.16

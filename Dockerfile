@@ -1,79 +1,90 @@
-# =============================================================================
+# ============================================================================
 # AMR Resistance Prediction — Dockerfile
-# Base: python:3.11-slim-bookworm (Debian 12)
+# Multi-stage build con pip. Soporta CPU y GPU via build arg.
 #
 # Build args:
-#   DEVICE=cpu  →  PyTorch CPU   (por defecto)
-#   DEVICE=gpu  →  PyTorch CUDA 12.1
+#   DEVICE=cpu (default) | gpu
 #
-# Uso directo:
-#   docker build --build-arg DEVICE=cpu -t amr-pred:cpu .
-#   docker build --build-arg DEVICE=gpu -t amr-pred:gpu .
-#
-# Uso con docker compose (recomendado):
-#   docker compose --profile cpu up -d
-#   docker compose --profile gpu up -d
-# =============================================================================
+# Uso:
+#   docker compose --profile cpu up -d --build
+#   docker compose --profile gpu up -d --build
+# ============================================================================
 
+# ── Stage 1: base con dependencias del sistema ────────────────────────────
+FROM python:3.11-slim-bookworm AS base
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        build-essential \
+        curl \
+        git \
+        jellyfish \
+        procps \
+    && rm -rf /var/lib/apt/lists/*
+
+# ── Stage 2: instalar dependencias Python ──────────────────────────────────
+FROM base AS deps
+
+WORKDIR /tmp/reqs
+
+# Copiar requirements (cache layer — solo se reconstruye si cambian)
+COPY requirements/ ./
+
+# Argumento para seleccionar CPU o GPU
 ARG DEVICE=cpu
 
-# ---------- Stage 1: builder -------------------------------------------------
-FROM python:3.11-slim-bookworm AS builder
+# Instalar PyTorch primero (es el paquete más pesado)
+# CPU: índice especial sin CUDA (~300 MB)
+# GPU: índice con CUDA 12.1 (~2.5 GB)
+RUN if [ "$DEVICE" = "gpu" ]; then \
+        pip install -r torch-gpu.txt ; \
+    else \
+        pip install -r torch-cpu.txt ; \
+    fi
 
-ARG DEVICE
+# Instalar el resto de dependencias
+RUN pip install -r base.txt
+RUN pip install -r dev.txt
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    gcc \
-    g++ \
-    git \
-    && rm -rf /var/lib/apt/lists/*
+# ── Stage 3: imagen de desarrollo ─────────────────────────────────────────
+FROM deps AS dev
 
-WORKDIR /build
-
-# 1. Dependencias base (sin torch) — capa cacheada independientemente de DEVICE
-COPY requirements/base.txt requirements/base.txt
-RUN pip install --upgrade pip && \
-    pip install --prefix=/install --no-cache-dir -r requirements/base.txt
-
-# 2. Dependencias específicas del dispositivo (cpu o gpu)
-#    El condicional se resuelve en build-time con el ARG.
-COPY requirements/cpu.txt requirements/cpu.txt
-COPY requirements/gpu.txt requirements/gpu.txt
-RUN pip install --prefix=/install --no-cache-dir \
-        -r requirements/${DEVICE}.txt
-
-
-# ---------- Stage 2: runtime -------------------------------------------------
-FROM python:3.11-slim-bookworm AS runtime
-
-ARG DEVICE
-# Guardamos DEVICE como variable de entorno para que los scripts puedan leerla
-ENV DEVICE=${DEVICE}
-ENV PYTHONPATH=/workspace/src
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
-
-LABEL maintainer="amr-project"
-LABEL description="AMR resistance prediction — device=${DEVICE}"
-
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    jellyfish \
-    procps \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
-
-COPY --from=builder /install /usr/local
-
-RUN useradd --create-home --shell /bin/bash amr
-USER amr
 WORKDIR /workspace
+
+# Crear usuario no-root
+ARG USERNAME=vscode
+ARG USER_UID=1000
+ARG USER_GID=${USER_UID}
+
+RUN groupadd --gid ${USER_GID} ${USERNAME} \
+    && useradd --uid ${USER_UID} --gid ${USER_GID} -m ${USERNAME} -s /bin/bash \
+    && mkdir -p /workspace/data/raw/genomes_fasta /workspace/data/processed \
+                /workspace/outputs/models /workspace/outputs/figures \
+    && chown -R ${USERNAME}:${USERNAME} /workspace
+
+# Jupyter sin token ni password
+ENV JUPYTER_TOKEN="" \
+    JUPYTER_CONFIG_DIR="/home/${USERNAME}/.jupyter"
+
+RUN mkdir -p ${JUPYTER_CONFIG_DIR} \
+    && echo "c.ServerApp.token = ''" > ${JUPYTER_CONFIG_DIR}/jupyter_server_config.py \
+    && echo "c.ServerApp.password = ''" >> ${JUPYTER_CONFIG_DIR}/jupyter_server_config.py \
+    && echo "c.ServerApp.disable_check_xsrf = True" >> ${JUPYTER_CONFIG_DIR}/jupyter_server_config.py \
+    && chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}
+
+# src/ importable desde notebooks
+ENV PYTHONPATH="/workspace/src:${PYTHONPATH}"
+
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
+    CMD curl -f http://localhost:8888/api/status || exit 1
 
 EXPOSE 8888
 
-CMD ["jupyter", "lab", \
-     "--ip=0.0.0.0", \
-     "--port=8888", \
-     "--no-browser", \
-     "--NotebookApp.token=''", \
-     "--NotebookApp.password=''"]
+USER ${USERNAME}
+
+CMD ["jupyter", "lab", "--ip=0.0.0.0", "--port=8888", "--no-browser"]

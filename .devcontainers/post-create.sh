@@ -1,52 +1,38 @@
 #!/usr/bin/env bash
-# =============================================================================
-# post-create.sh — Se ejecuta UNA VEZ tras crear el Dev Container
-# No uses conda aquí. Todo ya está instalado en la imagen.
-# =============================================================================
+# .devcontainer/post-create.sh
+# Se ejecuta una vez tras crear el contenedor.
 set -euo pipefail
 
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "  AMR Project — Post-create setup"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "╔══════════════════════════════════════════════╗"
+echo "║  AMR Resistance Prediction — Post-create     ║"
+echo "╚══════════════════════════════════════════════╝"
 
-# 1. Crear estructura de directorios si no existe
-echo "→ Creando estructura de directorios..."
-mkdir -p datos/brutos/genomas_fasta
-mkdir -p datos/procesados
-mkdir -p informes/figuras
-mkdir -p src/amr
-mkdir -p outputs/models
-mkdir -p outputs/figures
+# Crear directorios de datos si no existen
+mkdir -p data/raw/genomes_fasta data/processed
+mkdir -p outputs/models outputs/figures
 
-# 2. Crear .env a partir del ejemplo si no existe
-if [ ! -f .env ]; then
-    echo "→ Creando .env desde .env.example..."
-    cp .env.example .env
-    echo "  ⚠️  Edita .env y añade tu token BV-BRC si lo necesitas."
-fi
+# Configurar git
+git config --global --add safe.directory /workspace
 
-# 3. Registrar kernel de Jupyter (ya no es conda, es el Python del contenedor)
-echo "→ Registrando kernel de Jupyter..."
-python -m ipykernel install \
-    --user \
-    --name amr-pred \
-    --display-name "AMR Prediction (py3.11)"
-
-# 4. Verificar dependencias críticas
-echo "→ Verificando instalación..."
+# Verificación rápida de dependencias
+echo ""
+echo "Verificando dependencias..."
 python -c "
-import sklearn, xgboost, pytorch_tabnet, shap, Bio
+import sklearn, xgboost, shap, torch
 print(f'  scikit-learn : {sklearn.__version__}')
 print(f'  xgboost      : {xgboost.__version__}')
-print(f'  pytorch-tabnet: ok')
 print(f'  shap         : {shap.__version__}')
-print(f'  biopython    : {Bio.__version__}')
+print(f'  pytorch      : {torch.__version__}')
+print(f'  cuda         : {torch.cuda.is_available()}')
 "
 
-# 5. Verificar jellyfish (herramienta de k-mers)
-echo "→ Verificando jellyfish..."
-jellyfish --version || echo "  ⚠️  jellyfish no encontrado — revisa el Dockerfile"
+if command -v jellyfish &> /dev/null; then
+    echo "  jellyfish    : $(jellyfish --version 2>&1 | head -1)"
+else
+    echo "  jellyfish    : ⚠ no encontrado"
+fi
 
 echo ""
-echo "✅ Setup completado. JupyterLab disponible en http://localhost:8888"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "✓ Entorno listo."
+echo "  → Notebooks: haz doble clic en cualquier .ipynb en el explorador de VSCode"
+echo "  → JupyterLab: ejecuta 'make jupyter' en el terminal"

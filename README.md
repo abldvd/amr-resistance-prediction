@@ -4,12 +4,14 @@
 
 [![Python](https://img.shields.io/badge/Python-3.11-3776AB?style=flat-square&logo=python)](https://www.python.org/)
 [![Docker](https://img.shields.io/badge/Docker-required-2496ED?style=flat-square&logo=docker)](https://www.docker.com/)
+[![Dev Container](https://img.shields.io/badge/Dev%20Container-ready-0DB7ED?style=flat-square&logo=visualstudiocode)](https://containers.dev/)
 [![Licencia](https://img.shields.io/badge/Licencia-MIT-green?style=flat-square)](LICENSE)
 [![Estado](https://img.shields.io/badge/Estado-En%20desarrollo-orange?style=flat-square)]()
 
-Predicción de fenotipos de resistencia antibiótica (Susceptible / Intermedio / Resistente) en *Klebsiella pneumoniae* a partir de datos de secuenciación genómica completa (WGS) procedentes de [BV-BRC](https://www.bv-brc.org/). El pipeline combina vectores de frecuencia de k-mers, matrices de presencia/ausencia de genes AMR y tres modelos de ML supervisado — Random Forest, XGBoost y **TabNet** — con interpretabilidad basada en valores SHAP y atención aprendida.
+Predicción de fenotipos de resistencia antibiótica (Susceptible / Resistente) en *Klebsiella pneumoniae* a partir de datos de secuenciación genómica completa (WGS) procedentes de [BV-BRC](https://www.bv-brc.org/). El pipeline combina vectores de frecuencia de k-mers, matrices de presencia/ausencia de genes AMR y tres modelos de ML supervisado — Random Forest, XGBoost y **TabNet** — con interpretabilidad basada en valores SHAP y atención aprendida.
 
-> **Entorno de desarrollo:** Windows 11 · Docker Desktop · VSCode Dev Containers · Python 3.11 · JupyterLab
+> **Stack:** Docker · VSCode Dev Containers · pip · Python 3.11 · PyTorch · JupyterLab  
+> **Plataforma principal:** Windows 11 + WSL2
 
 ---
 
@@ -18,14 +20,18 @@ Predicción de fenotipos de resistencia antibiótica (Susceptible / Intermedio /
 - [Contexto científico](#contexto-científico)
 - [Modelos](#modelos)
 - [Estructura del proyecto](#estructura-del-proyecto)
-- [Entorno de desarrollo](#entorno-de-desarrollo)
-  - [Requisitos previos](#1-requisitos-previos)
-  - [Primeros pasos](#2-primeros-pasos)
-  - [Arrancar el contenedor](#3-arrancar-el-contenedor)
-  - [Setup GPU (opcional)](#setup-gpu-opcional)
+- [Guía de instalación paso a paso](#guía-de-instalación-paso-a-paso)
+  - [Paso 1 — Verificar Docker y WSL2](#paso-1--verificar-docker-y-wsl2)
+  - [Paso 2 — Instalar la extensión Dev Containers](#paso-2--instalar-la-extensión-dev-containers)
+  - [Paso 3 — Clonar el repositorio](#paso-3--clonar-el-repositorio)
+  - [Paso 4 — Abrir el proyecto en el contenedor](#paso-4--abrir-el-proyecto-en-el-contenedor)
+  - [Paso 5 — Verificar que todo funciona](#paso-5--verificar-que-todo-funciona)
+  - [Paso 6 — Abrir JupyterLab](#paso-6--abrir-jupyterlab)
+- [Setup GPU (opcional)](#setup-gpu-opcional)
 - [Descarga de datos](#descarga-de-datos)
-- [Visión general del pipeline](#visión-general-del-pipeline)
+- [Pipeline](#pipeline)
 - [Resultados](#resultados)
+- [Makefile — referencia de comandos](#makefile--referencia-de-comandos)
 - [Solución de problemas](#solución-de-problemas)
 - [Referencias](#referencias)
 
@@ -89,189 +95,303 @@ Matriz k-mer sparse (N × 100k)
 amr-resistance-prediction/
 │
 ├── .devcontainer/
-│   ├── devcontainer.json        # configuración VSCode Dev Containers
-│   └── post-create.sh           # setup automático al crear el contenedor
+│   ├── devcontainer.json          # configuración Dev Container
+│   └── post-create.sh             # setup automático tras crear el contenedor
 │
 ├── requirements/
-│   ├── base.txt                 # dependencias comunes (scikit-learn, pandas…)
-│   ├── cpu.txt                  # PyTorch CPU-only
-│   └── gpu.txt                  # PyTorch CUDA 12.1
+│   ├── base.txt                   # dependencias comunes (scikit-learn, pandas…)
+│   ├── dev.txt                    # herramientas de desarrollo (ruff, pytest)
+│   ├── torch-cpu.txt              # PyTorch CPU-only
+│   └── torch-gpu.txt              # PyTorch CUDA 12.1
 │
 ├── data/
-│   ├── brutos/                  # datos BV-BRC — no versionados (.gitignore)
-│   │   ├── genomas_fasta/       # secuencias WGS por lotes (.fasta)
-│   │   ├── amr_fenotipos.csv    # etiquetas S/I/R + valores MIC
-│   │   └── amr_matriz_genes.csv # presencia/ausencia de genes AMR
-│   └── procesados/              # outputs del preprocesado — no versionados
-│       ├── informe_qc_genomas.csv
-│       ├── matriz_kmers.npz
+│   ├── raw/                       # datos BV-BRC — no versionados (.gitignore)
+│   │   ├── genomes_fasta/         # secuencias WGS por lotes (.fasta)
+│   │   ├── amr_phenotypes.csv     # etiquetas S/I/R + valores MIC
+│   │   └── amr_gene_matrix.csv    # presencia/ausencia de genes AMR
+│   └── processed/                 # outputs del preprocesado — no versionados
+│       ├── genome_qc_report.csv
+│       ├── kmer_matrix.npz
 │       ├── X_final.npz
 │       └── y_final.npy
 │
 ├── notebooks/
-│   ├── 01_descarga_datos.ipynb
-│   ├── 02_control_calidad_genomica.ipynb
-│   ├── 03_variable_target.ipynb
-│   ├── 04_extraccion_kmers.ipynb
-│   ├── 05_matriz_features.ipynb
-│   ├── 06_preprocesado.ipynb
-│   ├── 07_entrenamiento_rf_xgb.ipynb
-│   ├── 08_entrenamiento_tabnet.ipynb
-│   └── 09_interpretabilidad.ipynb
+│   ├── 01_data_download.ipynb
+│   ├── 02_genome_qc.ipynb
+│   ├── 03_target_variable.ipynb
+│   ├── 04_kmer_extraction.ipynb
+│   ├── 05_feature_matrix.ipynb
+│   ├── 06_preprocessing.ipynb
+│   ├── 07_train_rf_xgb.ipynb
+│   ├── 08_train_tabnet.ipynb
+│   └── 09_interpretability.ipynb
 │
 ├── src/
-│   └── amr/                     # código reutilizable (importado desde notebooks)
+│   └── amr/                       # código reutilizable (importado desde notebooks)
+│       ├── __init__.py
+│       ├── data.py
+│       ├── features.py
+│       ├── models.py
+│       └── evaluation.py
 │
 ├── outputs/
-│   ├── models/                  # modelos serializados — no versionados
-│   └── figures/                 # gráficos exportados — no versionados
+│   ├── models/                    # modelos serializados — no versionados
+│   └── figures/                   # gráficos exportados — no versionados
 │
-├── informes/
-│   └── figuras/
-│
-├── Dockerfile                   # multi-stage, soporta DEVICE=cpu|gpu
-├── docker-compose.yml           # perfiles: cpu · gpu
-├── .env.example                 # plantilla de variables de entorno
+├── Dockerfile                     # multi-stage, soporta DEVICE=cpu|gpu
+├── docker-compose.yml             # perfiles: cpu · gpu
+├── Makefile                       # atajos: make up, make jupyter, make shell…
+├── .env.example                   # plantilla de variables de entorno
 ├── .gitignore
 └── README.md
 ```
 
 ---
 
-## Entorno de desarrollo
+## Guía de instalación paso a paso
 
-El entorno corre dentro de un contenedor Docker. En el host solo necesitas Docker Desktop y VSCode — nada más.
+> **Punto de partida:** tienes instalado **VSCode**, **Docker Desktop** y **WSL2** en Windows 11.  
+> No necesitas Python, pip, ni ninguna otra herramienta en tu máquina — todo corre dentro del contenedor.
 
-**Tiempo estimado de setup inicial:** 15–25 min (PyTorch pesa ~2 GB en descarga).
+**Tiempo estimado:** 15–25 minutos (la primera vez, porque PyTorch pesa ~2 GB).
 
 ---
 
-### 1. Requisitos previos
+### Paso 1 — Verificar Docker y WSL2
 
-| Herramienta | Descarga | Notas |
-|---|---|---|
-| Docker Desktop 4.x | [docs.docker.com/desktop/windows](https://docs.docker.com/desktop/windows/install/) | Durante la instalación, usa el backend **Hyper-V**, no WSL2 |
-| VSCode | [code.visualstudio.com](https://code.visualstudio.com/) | |
-| Extensión Dev Containers | `Ctrl+Shift+X` → busca `ms-vscode-remote.remote-containers` | |
-| Git para Windows | [git-scm.com](https://git-scm.com/download/win) | |
-
-Tras instalar Docker, verifica en PowerShell:
+Abre **PowerShell** (o Windows Terminal) y ejecuta estos comandos:
 
 ```powershell
-docker --version          # Docker version 26.x.x
-docker compose version    # Docker Compose version v2.x.x
+wsl --version
+```
+
+Deberías ver algo como:
+
+```
+Versión de WSL: 2.x.x.x
+Versión de kernel: 5.15.x
+```
+
+Si dice `wsl: command not found` o muestra la versión 1, ejecuta `wsl --install` y reinicia Windows.
+
+```powershell
+docker --version
+```
+
+```
+Docker version 27.x.x, build xxxxxxx
+```
+
+```powershell
+docker compose version
+```
+
+```
+Docker Compose version v2.x.x
+```
+
+Ahora verifica que Docker Desktop está configurado con WSL2. Abre **Docker Desktop** y comprueba:
+
+```
+Settings  →  General  →  ✅ "Use the WSL 2 based engine"
+```
+
+```
+Settings  →  Resources  →  WSL Integration  →  ✅ "Enable integration with my default WSL distro"
+```
+
+Si has hecho cambios, pulsa **Apply & restart**.
+
+Confirma que Docker funciona:
+
+```powershell
 docker run --rm hello-world
 ```
 
+Deberías ver `Hello from Docker!`. Si falla, reinicia Docker Desktop y vuelve a intentar.
+
 ---
 
-### 2. Primeros pasos
+### Paso 2 — Instalar la extensión Dev Containers
 
-Abre PowerShell y ejecuta:
+Abre **VSCode** y pulsa `Ctrl+Shift+X` para abrir el panel de extensiones. Busca e instala:
 
-```powershell
-# Clonar el repositorio
-git clone https://github.com/<tu-usuario>/amr-resistance-prediction.git
-cd amr-resistance-prediction
-
-# Crear el .env desde la plantilla
-copy .env.example .env
-
-# Crear la estructura de datos dentro del proyecto
-mkdir data\brutos\genomas_fasta
-mkdir data\procesados
+```
+Dev Containers
 ```
 
-El `.env` no necesita cambios para empezar — `AMR_DATA_DIR` ya apunta a `./data` por defecto.
+El autor es **Microsoft** (ID: `ms-vscode-remote.remote-containers`). Solo necesitas esta extensión — las demás (Python, Jupyter, Ruff, GitLens…) se instalarán automáticamente dentro del contenedor.
 
 ---
 
-### 3. Arrancar el contenedor
+### Paso 3 — Clonar el repositorio
 
-**Opción A — VSCode Dev Containers (recomendado)**
+Abre **PowerShell** y ejecuta:
+
+```powershell
+git clone https://github.com/<tu-usuario>/amr-resistance-prediction.git
+cd amr-resistance-prediction
+copy .env.example .env
+```
+
+> **Tip de rendimiento:** si más adelante notas que el contenedor va lento accediendo a ficheros, puedes mover el repositorio al filesystem de WSL. Abre una terminal WSL (escribe `wsl` en PowerShell) y clona en `~/`:
+>
+> ```bash
+> cd ~
+> git clone https://github.com/<tu-usuario>/amr-resistance-prediction.git
+> ```
+>
+> Luego en VSCode usa `F1 → Dev Containers: Open Folder in Container` y navega a `\\wsl$\Ubuntu\home\<tu-usuario>\amr-resistance-prediction`.
+
+---
+
+### Paso 4 — Abrir el proyecto en el contenedor
+
+Abre el directorio del proyecto en VSCode:
 
 ```powershell
 code .
 ```
 
-VSCode detectará `.devcontainer/devcontainer.json` y mostrará la notificación *"Reopen in Container"* en la esquina inferior derecha. Haz clic en ella. Si no aparece:
+VSCode detectará la carpeta `.devcontainer/` y mostrará una notificación en la esquina inferior derecha:
+
+```
+📦 Folder contains a Dev Container configuration file.
+   Reopen in Container
+```
+
+**Haz clic en "Reopen in Container".**
+
+Si la notificación no aparece, usa la paleta de comandos:
 
 ```
 F1  →  Dev Containers: Reopen in Container
 ```
 
-VSCode construirá la imagen (solo la primera vez), arrancará el contenedor y abrirá una ventana conectada a él. El terminal integrado ya está dentro del contenedor. La esquina inferior izquierda mostrará `>< Dev Container: AMR — CPU`.
+**Lo que ocurre ahora (todo automático, no tienes que hacer nada):**
 
-Para abrir JupyterLab:
+1. **Docker construye la imagen** — descarga Python 3.11, instala PyTorch, scikit-learn, XGBoost, SHAP, JupyterLab, jellyfish y el resto de dependencias. **Esto tarda 15–20 minutos la primera vez** porque PyTorch pesa ~2 GB. Puedes seguir el progreso en la barra inferior de VSCode — haz clic en *"Starting Dev Container (show log)"* para ver los detalles.
 
-```bash
-jupyter lab   # ejecuta esto en el terminal integrado de VSCode
+2. **Docker arranca el contenedor** con tu código montado dentro.
+
+3. **Se ejecuta `post-create.sh`** — crea los directorios de datos, verifica las dependencias y configura git.
+
+4. **VSCode se reconecta al contenedor** — instala las extensiones (Python, Jupyter, Ruff, GitLens) dentro del contenedor automáticamente.
+
+Cuando termine, la esquina inferior izquierda de VSCode mostrará:
+
+```
+>< Dev Container: AMR Prediction
 ```
 
-El puerto se reenvía automáticamente → [http://localhost:8888](http://localhost:8888).
+**Ya estás dentro del contenedor.** El terminal integrado (`Ctrl+ñ` o `` Ctrl+` ``) ejecuta comandos dentro del contenedor Linux, no en tu Windows.
 
-**Opción B — Solo terminal**
+---
 
-```powershell
-docker compose --profile cpu up -d          # arranca en background
-docker compose logs -f dev-cpu              # sigue los logs
-docker compose exec dev-cpu bash            # shell dentro del contenedor
-docker compose --profile cpu down           # para el contenedor
-```
+### Paso 5 — Verificar que todo funciona
 
-**Verificar que todo funciona** (desde el terminal del contenedor):
+Abre el terminal integrado de VSCode (`Ctrl+ñ`) y ejecuta:
 
 ```bash
-python -c "import sklearn, xgboost, shap, torch; print('OK')"
-jellyfish --version
-ls /workspace/datos/brutos/
+make check
+```
+
+Deberías ver:
+
+```
+  scikit-learn : 1.x.x
+  xgboost      : 2.x.x
+  shap         : 0.4x.x
+  pytorch      : 2.x.x
+  cuda         : False
+  jellyfish    : 2.x.x
+✓ Dependencias OK
+```
+
+`cuda: False` es correcto si no tienes GPU NVIDIA — el perfil CPU funciona perfectamente.
+
+---
+
+### Paso 6 — Abrir JupyterLab
+
+Tienes dos opciones para trabajar con notebooks:
+
+**Opción A — Notebooks directamente en VSCode (recomendado)**
+
+Haz doble clic en cualquier `.ipynb` del explorador de archivos de VSCode. El kernel de Jupyter ya está disponible dentro del contenedor — no necesitas lanzar nada.
+
+**Opción B — JupyterLab en el navegador**
+
+Desde el terminal integrado de VSCode:
+
+```bash
+make jupyter
+```
+
+Abre http://localhost:8888 en tu navegador. JupyterLab se abre sin pedir token ni contraseña. Para pararlo: `Ctrl+C` en el terminal.
+
+---
+
+### Resumen visual
+
+```
+Windows (tu máquina)
+│
+├── Docker Desktop (motor WSL2)
+│   └── Contenedor Linux
+│       ├── Python 3.11 + pip
+│       ├── PyTorch, scikit-learn, XGBoost, SHAP
+│       ├── JupyterLab (puerto 8888)
+│       ├── jellyfish (conteo de k-mers)
+│       └── Tu código (montado desde Windows)
+│
+└── VSCode
+    ├── Extensión Dev Containers → conectado al contenedor
+    ├── Python, Jupyter, Ruff → corren DENTRO del contenedor
+    └── Terminal integrado → bash del contenedor
 ```
 
 ---
 
-### Setup GPU (opcional)
+## Setup GPU (opcional)
 
-Requiere GPU NVIDIA (arquitectura Turing o superior) y driver **>= 525** instalado en Windows.
+Requiere GPU NVIDIA con driver ≥ 525 instalado **en Windows** (no dentro de WSL).
 
 **1. Verifica el driver en PowerShell:**
 
 ```powershell
-nvidia-smi   # debe mostrar tu GPU y la versión del driver
+nvidia-smi
 ```
 
-**2. Habilita soporte GPU en Docker Desktop:**
+Debe mostrar tu GPU y la versión del driver. Si falla, descarga el driver desde [nvidia.com/drivers](https://www.nvidia.com/Download/index.aspx).
 
-Docker Desktop en Windows con Hyper-V expone la GPU al contenedor sin necesidad de instalar el NVIDIA Container Toolkit manualmente — ya está integrado. Solo asegúrate de tener Docker Desktop **>= 4.x** y el driver NVIDIA actualizado.
-
-**3. Verifica que Docker ve la GPU:**
+**2. Verifica que Docker ve la GPU:**
 
 ```powershell
 docker run --rm --gpus all nvidia/cuda:12.1.0-base-ubuntu22.04 nvidia-smi
 ```
 
-**4. Construye y arranca la imagen GPU:**
+Si funciona, ya tienes soporte GPU. WSL2 + Docker Desktop lo manejan automáticamente.
 
-```powershell
-docker compose --profile gpu build
-docker compose --profile gpu up -d
-```
+**3. Cambia el Dev Container a GPU:**
 
-Para cambiar el Dev Container de CPU a GPU, edita dos líneas en `.devcontainer/devcontainer.json`:
+Edita `.devcontainer/devcontainer.json` y cambia dos líneas:
 
 ```jsonc
-"service": "dev-gpu",       // antes: dev-cpu
-"runServices": ["dev-gpu"], // antes: ["dev-cpu"]
+"service": "amr-dev-gpu",          // antes: amr-dev
+"runServices": ["amr-dev-gpu"],    // antes: ["amr-dev"]
 ```
 
-Luego: `F1 → Dev Containers: Rebuild Container`.
+Luego: `F1 → Dev Containers: Rebuild Container`. La primera vez construirá una imagen con PyTorch+CUDA (~3 GB extra).
 
-**Verificar CUDA dentro del contenedor:**
+**4. Verificar CUDA dentro del contenedor:**
 
 ```bash
 python -c "
 import torch
-print(f'CUDA: {torch.cuda.is_available()}')
-print(f'GPU : {torch.cuda.get_device_name(0)}')
+print(f'CUDA disponible: {torch.cuda.is_available()}')
+if torch.cuda.is_available():
+    print(f'GPU: {torch.cuda.get_device_name(0)}')
 "
 ```
 
@@ -279,23 +399,23 @@ print(f'GPU : {torch.cuda.get_device_name(0)}')
 
 ## Descarga de datos
 
-Los datos **no están versionados** en este repositorio por razones de tamaño y licencia de BV-BRC. Una vez el entorno esté funcionando, ejecuta el notebook `01_descarga_datos.ipynb` para descargarlos automáticamente vía la API de BV-BRC. Se guardarán en `data/brutos/` dentro del propio proyecto.
+Los datos **no están incluidos** en el repositorio por tamaño y licencia de BV-BRC. Una vez el entorno esté funcionando, ejecuta el notebook `01_data_download.ipynb` para descargarlos vía la API de BV-BRC.
 
 | Recurso | Tiempo estimado | Espacio en disco |
 |---|---|---|
 | Fenotipos AMR (CSV) | < 1 min | ~5 MB |
 | Genes AMR (CSV) | < 2 min | ~20 MB |
-| 500 genomas FASTA | 2–4 horas | ~3–5 GB |
+| ~500 genomas FASTA | 2–4 horas | ~3–5 GB |
 
 ---
 
-## Visión general del pipeline
+## Pipeline
 
 ```
 API BV-BRC
     │
-    ├── endpoint genome_amr        →  amr_fenotipos.csv    (etiquetas S/I/R + MIC)
-    └── endpoint genome_sequence   →  genomas_fasta/        (contigs WGS)
+    ├── endpoint genome_amr         →  amr_phenotypes.csv    (etiquetas S/I/R + MIC)
+    └── endpoint genome_sequence    →  genomes_fasta/         (contigs WGS)
             │
             ├── [QC] N50 > 20 kb · contigs < 500 · GC 50–64%
             │
@@ -338,45 +458,68 @@ API BV-BRC
 
 ---
 
+## Makefile — referencia de comandos
+
+| Comando | Descripción |
+|---|---|
+| `make up` | Construye imagen CPU y arranca el contenedor |
+| `make up-gpu` | Construye imagen GPU y arranca el contenedor |
+| `make down` | Para y elimina los contenedores |
+| `make shell` | Abre bash dentro del contenedor |
+| `make jupyter` | Lanza JupyterLab en http://localhost:8888 |
+| `make check` | Verifica dependencias instaladas |
+| `make logs` | Sigue los logs del contenedor |
+| `make build` | Solo construye la imagen (sin arrancar) |
+| `make clean` | Elimina contenedores, volúmenes y caché del proyecto |
+
+---
+
 ## Solución de problemas
 
-#### `docker compose` no reconoce el flag `--profile`
+#### La notificación "Reopen in Container" no aparece en VSCode
 
-Estás usando la versión antigua (`docker-compose` con guión). Este proyecto requiere Docker Compose V2 (`docker compose` sin guión). Actualiza Docker Desktop.
+Verifica que la extensión **Dev Containers** está instalada (`Ctrl+Shift+X` → busca `Dev Containers`). Después: `F1 → Dev Containers: Reopen in Container`.
 
-#### JupyterLab no carga en el navegador
+#### El build de la imagen se queda colgado o es muy lento
 
-Comprueba que el contenedor está corriendo y sano:
+PyTorch pesa ~2 GB. Si tu conexión es lenta, la descarga puede tardar bastante. Verifica los logs: `F1 → Dev Containers: Show Log`. Si ves errores de red, reinicia Docker Desktop y vuelve a intentar con `F1 → Dev Containers: Rebuild Container`.
 
-```powershell
+#### `docker compose` no reconoce `--profile`
+
+Estás usando Docker Compose V1 (`docker-compose` con guión). Este proyecto requiere V2 (`docker compose` sin guión). Actualiza Docker Desktop a la última versión.
+
+#### JupyterLab no carga en http://localhost:8888
+
+```bash
 docker compose ps
 ```
 
-El campo `Status` debe mostrar `healthy`. Si muestra `unhealthy`, revisa los logs:
-
-```powershell
-docker compose logs dev-cpu
-```
+Si `Status` no muestra `healthy`, revisa los logs con `make logs`.
 
 #### El kernel de Jupyter aparece como "dead"
 
-El kernel usa el Python del contenedor. Abre siempre los notebooks desde dentro del Dev Container en VSCode o desde el JupyterLab que corre en el contenedor — nunca desde un Jupyter local del host.
+Abre los notebooks desde dentro del Dev Container en VSCode o desde el JupyterLab del contenedor — nunca desde un Jupyter local instalado en Windows.
 
-#### `jellyfish: command not found` dentro del contenedor
+#### `jellyfish: command not found`
 
-Imagen desactualizada. Reconstruye forzando sin caché:
+Imagen desactualizada. Reconstruye sin caché:
 
-```powershell
-docker compose --profile cpu build --no-cache
+```bash
+make build ARGS="--no-cache"
 ```
 
-#### Docker no puede montar la ruta de datos
+#### Performance lenta en Windows
 
-Los datos están en `./data` dentro del proyecto. Docker Desktop necesita acceso a la unidad donde está clonado el repositorio. En Docker Desktop → Settings → Resources → File Sharing, verifica que la unidad (por ejemplo `C:`) aparece en la lista.
+Docker Desktop debe usar WSL2 (Settings → General → *"Use the WSL 2 based engine"*). Para mejor rendimiento, clona el repo dentro del filesystem de WSL en vez de en `C:\`:
+
+```bash
+# En terminal WSL
+cd ~ && git clone https://github.com/<tu-usuario>/amr-resistance-prediction.git
+```
 
 #### `nvidia-smi` falla dentro del contenedor GPU
 
-Verifica que el driver NVIDIA está actualizado en Windows y que Docker Desktop es versión 4.x o superior. Prueba primero el comando de verificación antes de construir la imagen GPU:
+Verifica el driver NVIDIA en **Windows** (no dentro de WSL). Prueba primero:
 
 ```powershell
 docker run --rm --gpus all nvidia/cuda:12.1.0-base-ubuntu22.04 nvidia-smi
