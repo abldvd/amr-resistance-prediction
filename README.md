@@ -29,6 +29,7 @@ Predicción de fenotipos de resistencia antibiótica (Susceptible / Resistente) 
   - [Paso 6 — Abrir JupyterLab](#paso-6--abrir-jupyterlab)
 - [Setup GPU (opcional)](#setup-gpu-opcional)
 - [Descarga de datos](#descarga-de-datos)
+- [Versionado de modelos](#versionado-de-modelos)
 - [Pipeline](#pipeline)
 - [Resultados](#resultados)
 - [Makefile — referencia de comandos](#makefile--referencia-de-comandos)
@@ -397,6 +398,35 @@ Los datos **no están incluidos** en el repositorio por tamaño y licencia de BV
 | Fenotipos AMR (CSV) | < 1 min | ~5 MB |
 | Genes AMR (CSV) | < 2 min | ~20 MB |
 | ~500 genomas FASTA | 2–4 horas | ~3–5 GB |
+
+---
+
+## Versionado de modelos
+
+Los modelos entrenados **no se incluyen en git** por tamaño. Se versionan con [DVC](https://dvc.org/) usando Google Drive como almacenamiento remoto.
+
+DVC ya está incluido en `requirements/dev.txt` y se instala automáticamente al construir el contenedor. No requiere instalación adicional.
+
+Para descargar los modelos necesitas:
+1. Tener acceso a la carpeta de Google Drive del proyecto (solicítalo al autor)
+2. Ejecutar `dvc pull` — se abrirá el navegador para autenticarte con Google
+
+**Subir un modelo tras entrenarlo:**
+
+```bash
+dvc add modelos/<modelo>.pkl
+git add modelos/<modelo>.pkl.dvc
+git commit -m "feat: añadir modelo <nombre>"
+dvc push
+```
+
+La primera vez que ejecutes `dvc push` se abrirá el navegador para autenticarte con Google.
+
+**Descargar los modelos en otra máquina:**
+
+```bash
+dvc pull
+```
 
 ---
 
