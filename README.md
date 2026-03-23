@@ -126,9 +126,8 @@ amr-resistance-prediction/
 │   ├── 08_entrenamiento_tabnet.ipynb
 │   └── 09_interpretabilidad.ipynb
 │
-├── informes/
-│   ├── modelos/                   # modelos serializados — no versionados
-│   └── figuras/                   # gráficos exportados — no versionados
+├── modelos/                       # modelos serializados — no versionados
+├── figuras/                       # gráficos exportados — no versionados
 │
 ├── Dockerfile                     # multi-stage, soporta DEVICE=cpu|gpu
 ├── docker-compose.yml             # perfiles: cpu · gpu
@@ -266,7 +265,7 @@ F1  →  Dev Containers: Reopen in Container
 
 2. **Docker arranca el contenedor** con tu código montado dentro.
 
-3. **Se ejecuta `post-create.sh`** — crea los directorios de datos e informes, verifica las dependencias y configura git.
+3. **Se ejecuta `post-create.sh`** — crea los directorios de datos, modelos y figuras, verifica las dependencias y configura git.
 
 4. **VSCode se reconecta al contenedor** — instala las extensiones (Python, Jupyter, Ruff, GitLens) dentro del contenedor automáticamente.
 

@@ -7,11 +7,11 @@ datos/brutos/genomas_fasta/*
 !datos/brutos/genomas_fasta/.gitkeep
 !datos/procesados/.gitkeep
 
-# ── Informes (modelos y figuras generados) ─────────────────────────────────
-informes/modelos/*
-informes/figuras/*
-!informes/modelos/.gitkeep
-!informes/figuras/.gitkeep
+# ── Modelos y figuras generados ─────────────────────────────────────────────
+modelos/*
+figuras/*
+!modelos/.gitkeep
+!figuras/.gitkeep
 
 # ── Python ─────────────────────────────────────────────────────────────────
 __pycache__/
@@ -38,3 +38,7 @@ build/
 # ── OS ─────────────────────────────────────────────────────────────────────
 .DS_Store
 Thumbs.db
+
+# ── Claude Code ─────────────────────────────────────────────────────────────
+.claude/
+CLAUDE.md
