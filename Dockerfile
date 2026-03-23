@@ -62,7 +62,7 @@ ARG USER_GID=${USER_UID}
 RUN groupadd --gid ${USER_GID} ${USERNAME} \
     && useradd --uid ${USER_UID} --gid ${USER_GID} -m ${USERNAME} -s /bin/bash \
     && mkdir -p /workspace/datos/brutos/genomas_fasta /workspace/datos/procesados \
-                /workspace/informes/modelos /workspace/informes/figuras \
+                /workspace/modelos /workspace/figuras \
     && chown -R ${USERNAME}:${USERNAME} /workspace
 
 # Jupyter sin token ni password

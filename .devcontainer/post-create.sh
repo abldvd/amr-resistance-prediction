@@ -9,7 +9,7 @@ echo "╚═══════════════════════�
 
 # Crear directorios si no existen
 mkdir -p datos/brutos/genomas_fasta datos/procesados
-mkdir -p informes/modelos informes/figuras
+mkdir -p modelos figuras
 
 # Configurar git
 git config --global --add safe.directory /workspace
