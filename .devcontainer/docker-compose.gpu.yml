@@ -1,0 +1,13 @@
+# Override GPU — copiado a docker-compose.devcontainer.yml por init.bat
+services:
+  amr-dev:
+    build:
+      args:
+        DEVICE: gpu
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]

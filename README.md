@@ -216,15 +216,17 @@ El autor es **Microsoft** (ID: `ms-vscode-remote.remote-containers`). Solo neces
 
 ---
 
-### Paso 3 — Clonar el repositorio
+### Paso 3 — Clonar el repositorio y crear el `.env`
 
 Abre **PowerShell** y ejecuta:
 
 ```powershell
-git clone https://github.com/<tu-usuario>/amr-resistance-prediction.git
+git clone https://github.com/abldvd/amr-resistance-prediction.git
 cd amr-resistance-prediction
 copy .env.example .env
 ```
+
+> ⚠️ **El archivo `.env` debe existir antes de abrir el contenedor.** Sin él, Docker Compose falla al validar la configuración y el "Reopen in Container" no arranca. El `devcontainer.json` lo crea automáticamente si lo olvidas, pero si usas `make up` directamente desde la línea de comandos tendrás que crearlo a mano.
 
 > **Tip de rendimiento:** si más adelante notas que el contenedor va lento accediendo a ficheros, puedes mover el repositorio al filesystem de WSL. Abre una terminal WSL (escribe `wsl` en PowerShell) y clona en `~/`:
 >
@@ -496,6 +498,22 @@ API BV-BRC
 ---
 
 ## Solución de problemas
+
+#### El contenedor no arranca: `env file .env not found`
+
+El archivo `.env` no existe en la raíz del proyecto. Créalo desde la plantilla:
+
+```powershell
+copy .env.example .env   # PowerShell / CMD
+```
+
+```bash
+cp .env.example .env     # WSL / bash
+```
+
+Después vuelve a intentar `F1 → Dev Containers: Reopen in Container`.
+
+---
 
 #### La notificación "Reopen in Container" no aparece en VSCode
 

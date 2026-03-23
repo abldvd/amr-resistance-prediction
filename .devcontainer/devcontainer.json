@@ -6,8 +6,13 @@
 {
     "name": "AMR Prediction",
 
+    // ── Inicialización (corre en el host antes de arrancar el contenedor) ──
+    // Detecta GPU y genera docker-compose.devcontainer.yml (CPU o GPU).
+    // También crea .env desde .env.example si no existe.
+    "initializeCommand": ".devcontainer\\init.bat",
+
     // ── Docker Compose ─────────────────────────────────────────────────
-    "dockerComposeFile": "../docker-compose.yml",
+    "dockerComposeFile": ["../docker-compose.yml", "../docker-compose.devcontainer.yml"],
     "service": "amr-dev",
     "runServices": ["amr-dev"],
     "workspaceFolder": "/workspace",

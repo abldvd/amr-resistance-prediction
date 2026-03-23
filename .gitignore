@@ -39,6 +39,9 @@ build/
 .DS_Store
 Thumbs.db
 
+# ── Dev Container (generado por init.bat, no versionar) ─────────────────────
+docker-compose.devcontainer.yml
+
 # ── Claude Code ─────────────────────────────────────────────────────────────
 .claude/
 CLAUDE.md

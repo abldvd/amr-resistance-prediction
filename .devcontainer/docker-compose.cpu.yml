@@ -1,0 +1,6 @@
+# Override CPU — copiado a docker-compose.devcontainer.yml por init.bat
+services:
+  amr-dev:
+    build:
+      args:
+        DEVICE: cpu

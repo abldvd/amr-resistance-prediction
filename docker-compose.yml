@@ -21,7 +21,8 @@ services:
     ports:
       - "8888:8888"
     env_file:
-      - .env
+      - path: .env
+        required: false
     environment:
       - PYTHONPATH=/workspace/src
     restart: unless-stopped
@@ -40,7 +41,8 @@ services:
     ports:
       - "8888:8888"
     env_file:
-      - .env
+      - path: .env
+        required: false
     environment:
       - PYTHONPATH=/workspace/src
     deploy:
